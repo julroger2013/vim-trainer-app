@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  vim-trainer:
+    build: .
+    container_name: vim-trainer-app
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - vim-trainer-network
+
+networks:
+  vim-trainer-network:
+    driver: bridge
+
+# Alternative version using pre-built image (uncomment to use)
+# services:
+#   vim-trainer:
+#     image: nginx:alpine
+#     container_name: vim-trainer-app
+#     restart: unless-stopped
+#     ports:
+#       - "3000:80"
+#     volumes:
+#       - ./dist:/usr/share/nginx/html:ro
+#       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+#     networks:
+#       - vim-trainer-network
