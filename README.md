@@ -1,133 +1,92 @@
 # Vim Navigation Trainer
 
-A React-based interactive trainer for learning Vim navigation commands. This application helps users practice essential Vim movements in a gamified environment.
+An interactive web application for practicing Vim navigation commands with keyboard shortcut support for modern browsers.
 
 ## Features
 
-- Interactive text editor simulation
-- Progressive difficulty levels (Beginner, Intermediate, Advanced)
-- Real-time feedback and scoring
-- Comprehensive command coverage (h,j,k,l, w,b, 0,$, gg,G)
-- Visual cursor and target indicators
+- **Progressive Learning**: Beginner, intermediate, and advanced difficulty levels
+- **Real-time Feedback**: Visual indicators for cursor position and target location
+- **Browser Compatibility**: Multiple keyboard shortcuts for Chromium-based browsers on macOS
+- **Responsive Design**: Works on desktop and mobile devices
 
-## Requirements
+## Keyboard Shortcuts
 
-- Docker and Docker Compose
-- Proxmox server with container support
+- **Cmd+N, Cmd+G, or F5**: Generate new exercise
+- **Cmd+Enter**: Check current position
+- **Standard Vim Keys**: h, j, k, l, w, b, 0, $, gg, G
 
-## Deployment on Proxmox
+## Development Workflow
 
-### Method 1: Using Docker Compose (Recommended)
+### Local Development
 
-1. **Transfer files to your Proxmox server:**
+1. **Clone the repository**:
    ```bash
-   # Copy the entire project directory to your Proxmox server
-   scp -r vim-trainer-app/ user@your-proxmox-server:/path/to/deployment/
+   git clone https://github.com/julroger2013/vim-trainer-app.git
+   cd vim-trainer-app
    ```
 
-2. **SSH into your Proxmox server:**
-   ```bash
-   ssh user@your-proxmox-server
-   cd /path/to/deployment/vim-trainer-app
-   ```
-
-3. **Build and run the application:**
-   ```bash
-   # Build and start the container
-   docker-compose up -d --build
-   
-   # Check if it's running
-   docker-compose ps
-   ```
-
-4. **Access the application:**
-   - Open your browser and go to `http://your-proxmox-server-ip:3000`
-
-### Method 2: Manual Docker Build
-
-1. **Build the Docker image:**
-   ```bash
-   docker build -t vim-trainer .
-   ```
-
-2. **Run the container:**
-   ```bash
-   docker run -d \
-     --name vim-trainer-app \
-     --restart unless-stopped \
-     -p 3000:80 \
-     vim-trainer
-   ```
-
-### Method 3: Development Mode (for testing)
-
-1. **Install Node.js dependencies:**
+2. **Install dependencies**:
    ```bash
    npm install
    ```
 
-2. **Run in development mode:**
+3. **Start development server**:
    ```bash
    npm run dev
    ```
 
-## Proxmox Container Template (LXC)
+4. **Open browser**: Visit http://localhost:3000
 
-If you prefer to use LXC containers instead of Docker:
+### Making Changes
 
-1. **Create a new LXC container:**
-   - Use Ubuntu 22.04 template
-   - Allocate at least 1GB RAM and 10GB storage
-   - Enable nesting if using Docker inside LXC
-
-2. **Install Docker in the LXC container:**
+1. **Edit files locally** (most changes will be in `src/VimTrainer.jsx`)
+2. **Test locally** at http://localhost:3000
+3. **Commit and push changes**:
    ```bash
-   apt update && apt install -y docker.io docker-compose
-   systemctl enable --now docker
+   git add .
+   git commit -m "Your change description"
+   git push origin main
    ```
 
-3. **Follow the deployment steps above**
+### Deploy to Server
 
-## Configuration
-
-### Port Configuration
-- Default port: 3000
-- To change the port, modify the `docker-compose.yml` file:
-  ```yaml
-  ports:
-    - "YOUR_PORT:80"
-  ```
-
-### Reverse Proxy Setup (Optional)
-For production deployment, consider setting up a reverse proxy with nginx or traefik:
-
-```nginx
-server {
-    listen 80;
-    server_name vim-trainer.yourdomain.com;
-    
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
+**Option 1: Automatic deployment script**
+```bash
+./deploy.sh
 ```
 
-## Troubleshooting
+**Option 2: Manual deployment**
+```bash
+# SSH to server and pull latest changes
+ssh root@192.168.50.10
+pct exec 110 -- bash -c 'cd /opt/vim-trainer && git pull origin main'
+pct exec 110 -- bash -c 'cd /opt/vim-trainer && docker compose up -d --build'
+```
 
-### Container won't start
-- Check Docker logs: `docker-compose logs vim-trainer`
-- Verify port availability: `netstat -tulpn | grep 3000`
+The app will be available at: http://192.168.50.254:3000
 
-### Application not accessible
-- Check firewall settings on Proxmox
-- Verify the container is running: `docker ps`
-- Test locally: `curl http://localhost:3000`
+## Project Structure
 
-### Performance issues
-- Increase container memory allocation
-- Check Proxmox host resources
+```
+vim-trainer-app/
+├── src/
+│   ├── VimTrainer.jsx      # Main React component
+│   ├── main.jsx            # App entry point
+│   └── index.css           # Global styles
+├── docker-compose.yml      # Docker configuration
+├── Dockerfile              # Container definition
+├── nginx.conf              # Web server configuration
+├── deploy.sh               # Automated deployment script
+└── README.md               # This file
+```
+
+## Technical Details
+
+- **Frontend**: React 18 with Vite
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **Containerization**: Docker with nginx
+- **Deployment**: Git-based workflow
 
 ## Commands Reference
 
@@ -147,30 +106,29 @@ server {
 - `gg` - Go to first line
 - `G` - Go to last line
 
-## Development
-
-### Local Development Setup
+## Local Development Setup
 ```bash
 npm install
 npm run dev
 ```
 
-### Building for Production
+## Building for Production
 ```bash
 npm run build
 npm run preview
 ```
 
-### Testing the Docker Build
-```bash
-docker build -t vim-trainer-test .
-docker run -p 3000:80 vim-trainer-test
-```
+## Troubleshooting
 
-## Support
+### Container won't start
+- Check Docker logs: `docker compose logs vim-trainer`
+- Verify port availability: `netstat -tulpn | grep 3000`
 
-For issues or questions:
-1. Check the container logs
-2. Verify all files are properly copied
-3. Ensure Docker and Docker Compose are properly installed
-4. Check Proxmox firewall and networking settings
+### Application not accessible
+- Check firewall settings on Proxmox
+- Verify the container is running: `docker ps`
+- Test locally: `curl http://localhost:3000`
+
+### Performance issues
+- Increase container memory allocation
+- Check Proxmox host resources
